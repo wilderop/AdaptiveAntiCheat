@@ -1,0 +1,56 @@
+# AdaptiveAntiCheat Configuration
+# =================================
+
+# Automatic trust settings
+trust:
+  # Players with this many hours of playtime are automatically trusted
+  auto-trust-hours: 500
+  # How often (in minutes) to re-check playtime for auto-trust on online players
+  recheck-interval-minutes: 30
+
+# Adaptive learning
+adaptive:
+  # How many confirmed false positives (from trusted players) are needed
+  # before the system loosens a check's threshold
+  false-positives-per-adjustment: 8
+  # How much to increase the tolerance multiplier each adjustment (e.g. 0.03 = +3%)
+  adjustment-amount: 0.03
+  # Maximum multiplier a check can reach (prevents thresholds from becoming useless)
+  max-multiplier: 1.75
+  # Minimum multiplier (rarely used, but available)
+  min-multiplier: 0.85
+
+# Checks
+checks:
+  speed:
+    enabled: true
+    # Base maximum horizontal speed in blocks/tick while on ground (vanilla walk ~0.22, sprint ~0.28)
+    # Higher values = more lenient. 0.42 is a reasonable starting point for anarchy servers.
+    base-max-speed: 0.42
+    # Extra tolerance when the player is in a vehicle (boats, pigs, horses, etc.)
+    vehicle-multiplier: 2.8
+    # Extra tolerance while gliding with elytra
+    elytra-multiplier: 3.5
+    # Ignore very short movements (helps with lag spikes and micro-movements)
+    min-distance: 0.08
+    # How many consecutive violations before flagging (buffer against single lag spikes)
+    buffer: 4
+    # Decay the violation buffer by this amount every second the player is clean
+    buffer-decay-per-second: 1.0
+
+# Logging
+logging:
+  # Log every violation to console (even if not punished)
+  console: true
+  # Also write violations to a file (plugins/AdaptiveAntiCheat/violations.log)
+  file: true
+  # Only log when the player is trusted (useful for pure false-positive collection)
+  trusted-only: false
+
+# Messages (supports MiniMessage)
+messages:
+  prefix: "<gray>[<gold>AAC</gold>]</gray> "
+  trusted: "<green>You have been marked as a trusted player.</green>"
+  untrusted: "<yellow>You are no longer marked as trusted.</yellow>"
+  no-permission: "<red>No permission.</red>"
+  player-not-found: "<red>Player not found.</red>"

@@ -1,0 +1,20 @@
+name: AdaptiveAntiCheat
+version: '${project.version}'
+main: com.wilderop.adaptiveac.AdaptiveAC
+api-version: '26.2'
+authors: [wilderop]
+description: Adaptive anti-cheat that learns from trusted high-playtime players to reduce false positives over time.
+website: https://github.com/wilderop/AdaptiveAntiCheat
+commands:
+  ac:
+    description: AdaptiveAntiCheat admin commands
+    usage: /ac <trust|untrust|status|reload|info|thresholds> [player]
+    permission: adaptiveac.admin
+    aliases: [adaptiveac, aac]
+permissions:
+  adaptiveac.admin:
+    description: Full access to AdaptiveAntiCheat commands and bypass
+    default: op
+  adaptiveac.bypass:
+    description: Completely bypass all checks
+    default: false
