@@ -1,28 +1,33 @@
 # AdaptiveAntiCheat
 
-Adaptive anti-cheat for **Paper** (Minecraft 26.2+).
+Adaptive anti-cheat for **Paper** (Minecraft 26.2+). **Log-only in 1.1** — no kicks, no inventory wipes, no enforcement.
 
-It uses **trusted high-playtime players** as ground truth.  
-When a trusted player triggers a check, the system treats it as a confirmed false positive and automatically loosens that check’s threshold over time.
+It uses **trusted high-playtime players** as ground truth, but only **per movement context** and only **once per session**. Ice boats and elytra must never train the ground threshold.
 
-## Core idea
+## What 1.1 changed
 
-1. Players with ≥ **500 hours** of playtime are automatically trusted (configurable).
-2. You can also manually `/ac trust` or `/ac untrust` anyone.
-3. Every violation from a trusted player feeds the adaptive system.
-4. After a configurable number of trusted false positives, the tolerance multiplier for that check is raised slightly.
-5. Multipliers are persisted across restarts.
+v1 logged every over-threshold move as if it were a cheat, used one global speed multiplier, and maxed that multiplier in seconds off a trusted elytra flight. 1.1:
 
-This makes the anti-cheat get *better* the longer it runs on your specific server (especially useful for anarchy / high-chaos environments with boats, pigs, crystal PvP, lag, etc.).
+- Measures **blocks per server tick** (distance / elapsed ticks), not distance per `PlayerMoveEvent`
+- Skips teleports, world changes, and lag gaps
+- Splits speed into contexts: ground, ice, soul speed, speed pots, vehicles, elytra, firework, riptide, wind burst
+- Writes **session summaries** (`sessions.log`) plus rate-limited samples
+- Adds log-only **timer** and **fly/hover** heuristics
+- Adds log-only **ore-find** (diamond / ancient debris rate + enclosed/beeline/axis path), with optional CoreProtect audit after a flag
+- Console logging off by default
 
-## Features (v1.0)
+## Log files (`plugins/AdaptiveAntiCheat/`)
 
-- Automatic trust by playtime + manual trust/untrust
-- Adaptive threshold system (starts simple, improves automatically)
-- Speed check with vehicle & elytra multipliers + ping compensation
-- Violation logging (console + `violations.log`)
-- Clean `/ac` admin commands
-- Fully configurable
+| File | Contents |
+|------|----------|
+| `sessions.log` | One line per over-threshold speed session (use this first) |
+| `samples.log` | At most ~1 Hz over-threshold samples with full context |
+| `skips.log` | Teleports / tick gaps / world changes (rate-limited) |
+| `timer.log` | Extra move events vs server ticks |
+| `fly.log` | Sustained air time / hover without elytra/vehicle |
+| `xray-sessions.log` | Ore-find flags (waste-per-ore + path shape) and CoreProtect audits |
+
+Old `violations.log` is unused. CoreProtect is a softdepend: if it is missing, live ore-find still logs and the audit line is skipped.
 
 ## Building
 
@@ -30,9 +35,9 @@ This makes the anti-cheat get *better* the longer it runs on your specific serve
 mvn clean package
 ```
 
-The jar will be in `target/AdaptiveAntiCheat-1.0.0-SNAPSHOT.jar`.
+Jar: `target/AdaptiveAntiCheat-1.1.0-SNAPSHOT.jar`. Java 21+, Paper 26.2+.
 
-Requires **Java 21+** and a Paper 26.2+ server.
+On first 1.1 boot the v1 `config.yml` is renamed to `config.yml.bak-v1` and the global `multipliers.speed` value is cleared.
 
 ## Commands
 
@@ -40,33 +45,14 @@ Requires **Java 21+** and a Paper 26.2+ server.
 |---------|-------------|
 | `/ac trust <player>` | Manually mark a player as trusted |
 | `/ac untrust <player>` | Manually mark a player as untrusted |
-| `/ac info <player>` | Show playtime + trust status |
-| `/ac status` | Show current adaptive multipliers and FP progress |
+| `/ac info <player>` | Playtime + trust |
+| `/ac status` | Per-context adaptive multipliers |
 | `/ac reload` | Reload config |
 
 Permission: `adaptiveac.admin` (default: op)
 
-## Configuration highlights
-
-See `config.yml` for all options. Key ones:
-
-- `trust.auto-trust-hours: 500`
-- `adaptive.false-positives-per-adjustment: 8`
-- `adaptive.adjustment-amount: 0.03` (3% each time)
-- `checks.speed.base-max-speed: 0.42`
-
-## Future plans
-
-- More checks (reach, CPS, bad packets, scaffolding, etc.)
-- Per-player trust scores / personal multipliers
-- Optional lightweight machine learning layer
-- Configurable punishments once confidence is high
-- Better vehicle / explosion / knockback handling
-
 ## License
 
-MIT (or whatever you prefer — feel free to change).
+MIT
 
----
-
-Built for the server **A Zombie Pigman Broke My Door** (lawlessmc.com).
+Built for **A Zombie Pigman Broke My Door**.

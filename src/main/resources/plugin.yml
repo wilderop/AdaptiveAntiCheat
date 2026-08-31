@@ -5,6 +5,8 @@ api-version: '26.2'
 authors: [wilderop]
 description: Adaptive anti-cheat that learns from trusted high-playtime players to reduce false positives over time.
 website: https://github.com/wilderop/AdaptiveAntiCheat
+softdepend:
+  - CoreProtect
 commands:
   ac:
     description: AdaptiveAntiCheat admin commands
