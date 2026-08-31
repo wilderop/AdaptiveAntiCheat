@@ -1,7 +1,7 @@
 package com.wilderop.adaptiveac.manager;
 
 import com.wilderop.adaptiveac.AdaptiveAC;
-import org.bukkit.entity.Player;
+import com.wilderop.adaptiveac.check.MoveContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,11 +34,13 @@ public class AdaptiveManager {
         maxMultiplier = plugin.getConfig().getDouble("adaptive.max-multiplier", 1.75);
         minMultiplier = plugin.getConfig().getDouble("adaptive.min-multiplier", 0.85);
 
-        // Load persisted values
         multipliers.clear();
         falsePositiveCounts.clear();
-        // We only track known checks for now
-        loadCheck("speed");
+        for (MoveContext ctx : MoveContext.values()) {
+            loadCheck(ctx.checkKey());
+        }
+        loadCheck("ore.diamond");
+        loadCheck("ore.debris");
     }
 
     private void loadCheck(String name) {
@@ -51,17 +53,11 @@ public class AdaptiveManager {
     }
 
     /**
-     * Called whenever any check produces a violation.
-     * If the player is trusted, this is treated as a false positive and may raise the threshold.
+     * One trusted over-threshold session counts as a single false positive
+     * for that context. Tick-level flags must not train the multiplier.
      */
-    public void onViolation(Player player, String checkName, double measuredValue, double currentThreshold) {
-        boolean trusted = plugin.getTrustManager().isTrusted(player);
-
-        if (trusted) {
-            recordFalsePositive(checkName);
-        }
-
-        // Logging is handled by the check itself
+    public void onTrustedSession(String checkName) {
+        recordFalsePositive(checkName);
     }
 
     private void recordFalsePositive(String checkName) {

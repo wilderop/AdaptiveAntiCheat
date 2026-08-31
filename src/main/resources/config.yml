@@ -1,53 +1,109 @@
-# AdaptiveAntiCheat Configuration
-# =================================
+# AdaptiveAntiCheat 1.1 — log-only, per-context, tick-based
+# No punishments. Sessions are the unit of analysis (not per-move spam).
 
-# Automatic trust settings
+config-version: 2
+
 trust:
-  # Players with this many hours of playtime are automatically trusted
   auto-trust-hours: 500
-  # How often (in minutes) to re-check playtime for auto-trust on online players
   recheck-interval-minutes: 30
 
-# Adaptive learning
 adaptive:
-  # How many confirmed false positives (from trusted players) are needed
-  # before the system loosens a check's threshold
+  # Counted once per trusted over-threshold SESSION, not per tick
   false-positives-per-adjustment: 8
-  # How much to increase the tolerance multiplier each adjustment (e.g. 0.03 = +3%)
   adjustment-amount: 0.03
-  # Maximum multiplier a check can reach (prevents thresholds from becoming useless)
   max-multiplier: 1.75
-  # Minimum multiplier (rarely used, but available)
   min-multiplier: 0.85
 
-# Checks
 checks:
   speed:
     enabled: true
-    # Base maximum horizontal speed in blocks/tick while on ground (vanilla walk ~0.22, sprint ~0.28)
-    # Higher values = more lenient. 0.42 is a reasonable starting point for anarchy servers.
-    base-max-speed: 0.42
-    # Extra tolerance when the player is in a vehicle (boats, pigs, horses, etc.)
-    vehicle-multiplier: 2.8
-    # Extra tolerance while gliding with elytra
-    elytra-multiplier: 3.5
-    # Ignore very short movements (helps with lag spikes and micro-movements)
+    # Ignore samples when more than this many server ticks elapsed (lag/unload)
+    max-gap-ticks: 5
+    # Horizontal distance in one sample treated as teleport/pearl/chunk, not speed
+    teleport-distance: 10.0
     min-distance: 0.08
-    # How many consecutive violations before flagging (buffer against single lag spikes)
-    buffer: 4
-    # Decay the violation buffer by this amount every second the player is clean
-    buffer-decay-per-second: 1.0
+    session-gap-ticks: 40
+    ignore-after-teleport-ticks: 10
+    ignore-after-riptide-ticks: 40
+    firework-ticks: 40
+    wind-ticks: 30
+    # Base max horizontal blocks/tick per context (before adaptive multiplier)
+    contexts:
+      ground: 0.42
+      speed_potion: 0.55
+      ice: 1.20
+      soul_speed: 0.70
+      vehicle_land: 1.00
+      vehicle_water: 0.80
+      vehicle_ice: 6.00
+      elytra: 3.50
+      elytra_firework: 12.00
+      riptide: 8.00
+      wind_burst: 2.50
 
-# Logging
+  timer:
+    enabled: true
+    window-ticks: 40
+    flag-ratio: 1.35
+    min-distance: 0.08
+    log-cooldown-ticks: 100
+
+  fly:
+    enabled: true
+    hover-air-ticks: 40
+    fly-air-ticks: 60
+    hover-dy: 0.08
+
+  # Live ore-find rate. CoreProtect is queried only after a flag.
+  ore:
+    enabled: true
+    window-seconds: 600
+    trail-size: 400
+    cooldown-seconds: 180
+    min-axis-length: 8
+    diamond:
+      materials:
+        - DIAMOND_ORE
+        - DEEPSLATE_DIAMOND_ORE
+      waste:
+        - STONE
+        - DEEPSLATE
+        - TUFF
+        - GRANITE
+        - DIORITE
+        - ANDESITE
+        - CALCITE
+        - SMOOTH_BASALT
+      min-y: -64
+      max-y: 16
+      min-ores: 4
+      # Flag when waste-per-ore < default / (flag-factor * adaptive multiplier)
+      default-waste-per-ore: 50.0
+      flag-factor: 2.0
+    debris:
+      materials:
+        - ANCIENT_DEBRIS
+      waste:
+        - NETHERRACK
+        - BLACKSTONE
+        - BASALT
+        - SOUL_SOIL
+        - MAGMA_BLOCK
+      min-y: 8
+      max-y: 22
+      min-ores: 3
+      default-waste-per-ore: 80.0
+      flag-factor: 2.0
+    coreprotect:
+      enabled: true
+      lookup-seconds: 1800
+
 logging:
-  # Log every violation to console (even if not punished)
-  console: true
-  # Also write violations to a file (plugins/AdaptiveAntiCheat/violations.log)
-  file: true
-  # Only log when the player is trusted (useful for pure false-positive collection)
-  trusted-only: false
+  # Keep this false — v1 console spam buried real incidents
+  console: false
+  samples: true
+  sample-interval-ticks: 20
 
-# Messages (supports MiniMessage)
 messages:
   prefix: "<gray>[<gold>AAC</gold>]</gray> "
   trusted: "<green>You have been marked as a trusted player.</green>"
