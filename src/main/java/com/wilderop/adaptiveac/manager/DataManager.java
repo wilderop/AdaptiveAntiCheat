@@ -74,6 +74,19 @@ public class DataManager {
         saveTrusted();
     }
 
+    /**
+     * v1 stored a single {@code multipliers.speed} scalar. That value was
+     * trained by elytra/boats and must not carry over to per-context keys.
+     */
+    public void resetLegacyGlobalSpeedMultiplier() {
+        if (!adaptiveConfig.contains("multipliers.speed")) return;
+        if (adaptiveConfig.isConfigurationSection("multipliers.speed")) return;
+        plugin.getLogger().info("Resetting v1 global speed multiplier; per-context keys start at 1.0");
+        adaptiveConfig.set("multipliers", null);
+        adaptiveConfig.set("false-positives", null);
+        saveAdaptive();
+    }
+
     public double getMultiplier(String checkName) {
         return adaptiveConfig.getDouble("multipliers." + checkName, 1.0);
     }
